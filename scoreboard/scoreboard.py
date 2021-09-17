@@ -4,7 +4,7 @@ import jinja2
 class Scoreboard:
 
     def __init__(self, teams):
-        self.winner = 'Andrew'
+        self.winner = None
         self.teams_to_weekly_scores = {}
         self.teams_to_weekly_records = {}
 
@@ -36,7 +36,7 @@ class Scoreboard:
             ranked_team_totals.append((rank, team, score))
             last_score = score
 
-        templateLoader = jinja2.FileSystemLoader(searchpath="./")
+        templateLoader = jinja2.FileSystemLoader(searchpath="./scoreboard/")
         templateEnv = jinja2.Environment(loader=templateLoader)
         TEMPLATE_FILE = "scoreboard_template.html.jinja2"
         template = templateEnv.get_template(TEMPLATE_FILE)

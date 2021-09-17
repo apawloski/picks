@@ -1,0 +1,184 @@
+<html>
+  <head>
+    <!-- Built on {{now}} -->
+    <meta charset="UTF-8">
+    <title>Winners and Losers 2021</title>
+    <link rel="icon" href="images/favicon.ico">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  </head>
+
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand" href="http://picks.apawl.com">Winners & Losers 2021</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+      <div class="navbar-nav">
+        <a id="scores_btn" class="nav-item nav-link" href='javascript:;' onclick="toggle_show_points_table();">Scores</a>
+        <a id="records_btn" class="nav-item nav-link" href='javascript:;' onclick="toggle_show_records_table();">Records</a>
+      </div>
+    </div>
+
+    <div class="dropdown show">
+      <a class="btn btn-secondary dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        History
+      </a>
+
+      <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+        <a class="dropdown-item" href="http://picks.apawl.com/2020/index.html">2020</a>
+        <a class="dropdown-item" href="http://picks.apawl.com/2019/index.html">2019</a>
+        <a class="dropdown-item" href="http://picks.apawl.com/2018/index.html">2018</a>
+      </div>
+    </div>
+
+  </nav>
+  <body>
+    <div class="container-fluid pt-3">
+      <form class="form-inline">
+        <input type="text" id="query" onkeyup="search_table()" placeholder="Search for Users..">
+      </form>
+      <div class="table-responsive">
+        <table id="points_table" class="table table-hover table-bordered">
+          <thead class="thead-light">
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">User</th>
+              <th scope="col">Overall Score</th>
+              <th scope="col">W1 Score</th>
+              <th scope="col">W2 Score</th>
+              <th scope="col">W3 Score</th>
+              <th scope="col">W4 Score</th>
+              <th scope="col">W5 Score</th>
+              <th scope="col">W6 Score</th>
+              <th scope="col">W7 Score</th>
+              <th scope="col">W8 Score</th>
+              <th scope="col">W9 Score</th>
+              <th scope="col">W10 Score</th>
+              <th scope="col">W11 Score</th>
+              <th scope="col">W12 Score</th>
+              <th scope="col">W13 Score</th>
+              <th scope="col">W14 Score</th>
+              <th scope="col">W15 Score</th>
+              <th scope="col">W16 Score</th>
+              <th scope="col">W17 Score</th>
+              <th scope="col">W18 Score</th>
+            </tr>
+          </thead>
+          <tbody>
+	    {% for rank,team,score in ranked_team_totals %}
+            <tr>
+              <th scope="row">{{rank}}</th> {# Rank #}
+              <td>{{team}}</td> {# Username #}
+              <td>{{score}}</td> {# Total score #}
+              {% set rowloop = loop %}
+	      {% for week in teams_to_weekly_scores[team] %}
+              {% if week > 0 %}
+              <td class="table-success">{{week}}</td>
+              {% elif week < 0 %}
+              <td class="table-danger">{{week}}</td>
+              {% else %}
+              <td>{{week}}</td>
+              {% endif %}
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+        <table id="records_table" style="display: none;" class="table table-hover table-bordered">
+          <thead class="thead-light">
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">User</th>
+              <th scope="col">Overall Score</th>
+              <th scope="col">W1 Record</th>
+              <th scope="col">W2 Record</th>
+              <th scope="col">W3 Record</th>
+              <th scope="col">W4 Record</th>
+              <th scope="col">W5 Record</th>
+              <th scope="col">W6 Record</th>
+              <th scope="col">W7 Record</th>
+              <th scope="col">W8 Record</th>
+              <th scope="col">W9 Record</th>
+              <th scope="col">W10 Record</th>
+              <th scope="col">W11 Record</th>
+              <th scope="col">W12 Record</th>
+              <th scope="col">W13 Record</th>
+              <th scope="col">W14 Record</th>
+              <th scope="col">W15 Record</th>
+              <th scope="col">W16 Record</th>
+              <th scope="col">W17 Record</th>
+            </tr>
+          </thead>
+          <tbody>
+	    {% for rank,team,score in ranked_team_totals %}
+            <tr>
+              <th scope="row">{{rank}}</th> {# Rank #}
+              <td>{{team}}</td> {# Username #}
+              <td>{{score}}</td> {# Total score #}
+              {% set rowloop = loop %}
+	      {% for week in teams_to_weekly_records[team] %}
+              <td>{{week}}</td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size: x-small">Scoreboard generated {{now}}</p>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+    <script type="text/javascript">
+        var points_table = document.getElementById("points_table");
+        var records_table = document.getElementById("records_table");
+
+        function toggle_show_points_table () {
+          document.getElementById("scores_btn").classList.add('active');
+          document.getElementById("records_btn").classList.remove('active');
+          points_table.style.display = "table";
+          records_table.style.display = "none";
+        }
+        function toggle_show_records_table() {
+          document.getElementById("records_btn").classList.add('active');
+          document.getElementById("scores_btn").classList.remove('active');
+          points_table.style.display = "none";
+          records_table.style.display = "table";
+        }
+        function search_table() {
+          // Declare variables
+          var input, filter, table, tr, td, i;
+          input = document.getElementById("query");
+          filter = input.value.toUpperCase();
+          table = document.getElementById("points_table");
+          tr = table.getElementsByTagName("tr");
+
+          for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[0];
+            if (td) {
+              if (td.innerHTML.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+              } else {
+                tr[i].style.display = "none";
+              }
+            }
+          }
+
+          table = document.getElementById("records_table");
+          tr = table.getElementsByTagName("tr");
+
+          for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[0];
+            if (td) {
+              if (td.innerHTML.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+              } else {
+                tr[i].style.display = "none";
+              }
+            }
+          }
+        }
+    </script>
+  </body>
+</html>
