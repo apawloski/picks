@@ -17,7 +17,7 @@ class PickEmClient:
             buttons = browser.find_by_text('Group Picks')
             buttons.first.click()
             # This is a hack to avoid the first page of teams turning up 0
-            time.sleep(2)
+            time.sleep(.25)
 
             weeks = browser.find_by_xpath("//*[contains(@class, 'dropdown__select')]")
 
@@ -25,14 +25,14 @@ class PickEmClient:
             for week in weeks.find_by_tag('option'):
                 week_num = int(week.text.lower().split('week ')[-1])
                 weeks.select(week.value)
-                time.sleep(2)
+                time.sleep(.25)
 
                 page_buttons = browser.find_by_xpath("//*[contains(@class, 'Pagination__list__item pointer inline-flex justify-center items-center')]")
 
                 pick_grids = []
                 for page_button in page_buttons:
                     page_button.click()
-                    time.sleep(1)
+                    time.sleep(.25)
                     pick_grids.append(browser.find_by_xpath("//*[contains(@class, 'GroupPickGrid-table')]").first.html)
 
                 for pick_grid in pick_grids:
