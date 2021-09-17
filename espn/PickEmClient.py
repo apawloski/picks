@@ -6,51 +6,66 @@ import time
 class PickEmClient:
 
     def __init__(self, group_id):
-        self.teams = {}
-        self.teams_to_weeks = {}
+        self.teams = {} # Maps team name to Team object
+
+        weeks_to_soups = {}
+        for w in range(0,19):
+            weeks_to_soups[w] = []
 
         with Browser('chrome', headless=True) as browser:
             browser.visit(f"https://fantasy.espn.com/games/nfl-pigskin-pickem-2021/group?id={group_id}")
             buttons = browser.find_by_text('Group Picks')
             buttons.first.click()
             # This is a hack to avoid the first page of teams turning up 0
-            time.sleep(1)
+            time.sleep(2)
 
-            page_buttons = browser.find_by_xpath("//*[contains(@class, 'Pagination__list__item pointer inline-flex justify-center items-center')]")
+            weeks = browser.find_by_xpath("//*[contains(@class, 'dropdown__select')]")
 
-            pick_grids = []
-            for page_button in page_buttons:
-                page_button.click()
-                pick_grids.append(browser.find_by_xpath("//*[contains(@class, 'GroupPickGrid-table')]").first.html)
 
-        soups = []
-        for pick_grid in pick_grids:
-            soups.append(BeautifulSoup(pick_grid, 'html.parser'))
+            for week in weeks.find_by_tag('option'):
+                week_num = int(week.text.lower().split('week ')[-1])
+                weeks.select(week.value)
+                time.sleep(2)
 
-        for soup in soups:
-            tables = soup.find_all('table')
-            idx_to_name = {}
-            for table in tables:
-                if 'GROUP ENTRIES' in table.text:
-                    rows = table.find_all('tr')
-                    for row in rows:
-                        # Get the team name and id
-                        idx = int(row['data-idx'])
-                        name = row.find('td', {"class": "GroupPickGrid-column--entryName Table__TD"})
-                        if name:
-                            idx_to_name[idx] = name.text
-                            self.teams[name.text] = Team(name.text, 'owner')
-                elif 'PICKS' in table.text:
-                    for row in table.find_all('tr'):
-                        current_team_idx = int(row['data-idx'])
-                        current_team_name = idx_to_name.get(current_team_idx)
-                        if current_team_name:
-                            current_team = self.teams[current_team_name]
-                            for pick in row.find_all('td'):
-                                # I hate the phrasing of this boolean.
-                                # We want to skip "noPick" tds.
-                                if not any(x for x in pick['class'] if 'noPick' in x):
-                                    current_team.add_weekly_pick(1, Pick(pick))
+                page_buttons = browser.find_by_xpath("//*[contains(@class, 'Pagination__list__item pointer inline-flex justify-center items-center')]")
+
+                pick_grids = []
+                for page_button in page_buttons:
+                    page_button.click()
+                    time.sleep(1)
+                    pick_grids.append(browser.find_by_xpath("//*[contains(@class, 'GroupPickGrid-table')]").first.html)
+
+                for pick_grid in pick_grids:
+                    weeks_to_soups[week_num].append(BeautifulSoup(pick_grid, 'html.parser'))
+
+        for week in weeks_to_soups:
+            soups = weeks_to_soups[week]
+            for soup in soups:
+                tables = soup.find_all('table')
+                idx_to_name = {}
+                for table in tables:
+                    if 'GROUP ENTRIES' in table.text.upper():
+                        rows = table.find_all('tr')
+                        for row in rows:
+                            # Get the team name and id
+                            idx = int(row['data-idx'])
+                            name = row.find('td', {"class": "GroupPickGrid-column--entryName Table__TD"})
+                            if name:
+                                idx_to_name[idx] = name.text
+                                if not self.teams.get(name.text):
+                                    self.teams[name.text] = Team(name.text, 'owner')
+                    elif 'PICKS' in table.text.upper():
+                        for row in table.find_all('tr'):
+                            current_team_idx = int(row['data-idx'])
+                            current_team_name = idx_to_name.get(current_team_idx)
+                            if current_team_name:
+                                current_team = self.teams[current_team_name]
+                                for pick in row.find_all('td'):
+                                    # I hate the phrasing of this boolean.
+                                    # We want to skip "noPick" tds and empty
+                                    # tds (which have no children)
+                                    if not any(x for x in pick['class'] if 'noPick' in x) and len(list(pick.children)) > 0:
+                                        current_team.add_weekly_pick(week, Pick(pick))
 
     def get_teams(self):
         return self.teams.values()
