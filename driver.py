@@ -6,9 +6,7 @@ def main():
     teams = espn.get_teams()
     scoreboard = Scoreboard(teams)
 
-    for week in range(1,19):
-        for team in teams:
-            scoreboard.submit_team_week(team, week)
+    [scoreboard.submit_team_week(team, week) for team in teams for week in range(1,19)]
 
     scoreboard.render('index.html')
     return
