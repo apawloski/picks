@@ -8,7 +8,7 @@ def main():
 
     [scoreboard.submit_team_week(team, week) for team in teams for week in range(1,19)]
 
-    scoreboard.render('index.html')
+    scoreboard.render('/tmp/sb-index.html')
     return
 
 if __name__ == '__main__':
