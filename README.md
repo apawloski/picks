@@ -1,6 +1,6 @@
 # Winners and Losers Scoreboard 2021
 
-This is the code that makes https://picks.apawl.com. It scrapes the EPSPN site and applies the +1/-2 scoring scheme.
+This is the code that makes https://picks.apawl.com. It scrapes the EPSPN site and applies the +1/-2 scoring scheme. It replaces the old by-hand scoring system that was done once a week.
 
 ## How it works
 
