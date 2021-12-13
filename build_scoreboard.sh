@@ -1,3 +1,7 @@
+#! /bin/bash
+
+cd /home/andrew/code/picks2021/
+
 source .venv/bin/activate
 
 python driver.py
