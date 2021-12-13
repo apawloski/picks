@@ -60,7 +60,7 @@ class PickEmClient:
                             current_team_name = idx_to_name.get(current_team_idx)
                             if current_team_name:
                                 current_team = self.teams[current_team_name]
-                                for pick in row.find_all('td'):
+                                for pick in row.find_all('td', {"class": "GroupPickGrid-column--pick"}):
                                     # I hate the phrasing of this boolean.
                                     # We want to skip "noPick" tds and empty
                                     # tds (which have no children)
