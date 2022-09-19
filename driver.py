@@ -2,7 +2,7 @@ from espn.PickEmClient import PickEmClient
 from scoreboard.scoreboard import Scoreboard
 
 def main():
-    espn = PickEmClient('f59398d9-bb0f-4467-83c2-d1cb17e4d023')
+    espn = PickEmClient('221ff77e-396d-4705-94f4-4c31cdcdba75')
     teams = espn.get_teams()
     scoreboard = Scoreboard(teams)
 

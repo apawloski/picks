@@ -13,14 +13,13 @@ class PickEmClient:
             weeks_to_soups[w] = []
 
         with Browser('chrome', headless=True) as browser:
-            browser.visit(f"https://fantasy.espn.com/games/nfl-pigskin-pickem-2021/group?id={group_id}")
+            browser.visit(f"https://fantasy.espn.com/games/nfl-pigskin-pickem-2022/group?id={group_id}")
             buttons = browser.find_by_text('Group Picks')
             buttons.first.click()
             # This is a hack to avoid the first page of teams turning up 0
-            time.sleep(1)
+            time.sleep(2)
 
             weeks = browser.find_by_xpath("//*[contains(@class, 'dropdown__select')]")
-
 
             for week in weeks.find_by_tag('option'):
                 week_num = int(week.text.lower().split('week ')[-1])
@@ -46,10 +45,12 @@ class PickEmClient:
                 for table in tables:
                     if 'GROUP ENTRIES' in table.text.upper():
                         rows = table.find_all('tr')
-                        for row in rows:
+                        # Skip first two rows which are not teams
+                        for row in rows[2:]:
                             # Get the team name and id
                             idx = int(row['data-idx'])
-                            name = row.find('td', {"class": "GroupPickGrid-column--entryName Table__TD"})
+                            name_row = row.find('td', {"class": "Table__TD GroupPickGrid-column--entryName Table__TD"})
+                            name = name_row.find_all('a', {"class": "GroupPickGrid-entryLink"})[-1]
                             if name:
                                 idx_to_name[idx] = name.text
                                 if not self.teams.get(name.text):
@@ -76,12 +77,13 @@ class Pick:
         self.pick = pick_td
         team_icon = self.pick.find('img')
         self.team_picked = team_icon['alt']
+        self.icon = pick_td.find('circle')
 
     def is_incorrect(self):
-        return any("incorrect" in x for x in self.pick['class'])
+        return any("PickIncorrect-circle" in x for x in self.icon['class'])
 
-    def is_tie(self):
-        tie_list = []
+    def is_tie(self,week):
+        tie_list = Helpers.weeks_to_ties(week)
         if Helpers.team_name_to_abbr(self.team_picked) in tie_list:
             return True
         return False
@@ -90,10 +92,7 @@ class Pick:
         return any("noPick" in x for x in self.pick['class'])
 
     def is_correct(self):
-        circle = self.pick.find('circle')
-        if circle:
-            return circle['fill'] == '#0d830f'
-        return False
+        return any("PickCorrect-circle" in x for x in self.icon['class'])
 
 class Team:
 
@@ -118,7 +117,7 @@ class Team:
         return len([pick for pick in self.get_weekly_picks(week) if pick.is_incorrect() and Helpers.team_name_to_abbr(pick.team_picked) not in Helpers.weeks_to_ties(week)])
 
     def get_weekly_num_ties(self, week):
-        return len([pick for pick in self.get_weekly_picks(week) if pick.is_tie()])
+        return len([pick for pick in self.get_weekly_picks(week) if pick.is_tie(week)])
 
     def get_weekly_score(self, week):
         return self.get_weekly_num_correct(week) - 2*self.get_weekly_num_incorrect(week)
@@ -131,7 +130,7 @@ class Helpers:
     @staticmethod
     def weeks_to_ties(week):
         week_tie_map = {
-            1: [], # e.g. ["PHI", "ATL"]
+            1: ["IND", "HOU"], # e.g. ["PHI", "ATL"]
             2: [],
             3: [],
             4: [],
@@ -140,7 +139,7 @@ class Helpers:
             7: [],
             8: [],
             9: [],
-            10: ["DET","PIT"],
+            10: [],
             11: [],
             12: [],
             13: [],
@@ -186,6 +185,6 @@ class Helpers:
             "Seattle Seahawks": "SEA",
             "Tampa Bay Buccaneers": "TB",
             "Tennessee Titans": "TEN",
-            "Washington": "WAS"
+            "Washington Commanders": "WAS"
       }
         return abbr_map[team_name]
