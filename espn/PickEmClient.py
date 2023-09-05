@@ -1,4 +1,8 @@
 from bs4 import BeautifulSoup
+from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.by import By
 from splinter import Browser
 import time
 
@@ -13,18 +17,28 @@ class PickEmClient:
             weeks_to_soups[w] = []
 
         with Browser('chrome', headless=True) as browser:
-            browser.visit(f"https://fantasy.espn.com/games/nfl-pigskin-pickem-2022/group?id={group_id}")
+            browser.visit(f"https://fantasy.espn.com/games/nfl-pigskin-pickem-2023/group?id={group_id}")
             buttons = browser.find_by_text('Group Picks')
             buttons.first.click()
-            # This is a hack to avoid the first page of teams turning up 0
-            time.sleep(2)
 
-            weeks = browser.find_by_xpath("//*[contains(@class, 'dropdown__select')]")
+            # Wait for the dropdown to appear on the page
+            wait = WebDriverWait(browser.driver, 2)  # wait up to 10 seconds
+            try:
+                weeks = wait.until(EC.presence_of_all_elements_located((By.XPATH, "//*[contains(@class, 'dropdown__select')]")),
+                                "The Group Picks' 'weeks' dropdown did not appear within 10 seconds")
+                weeks_to_select = weeks.find_by_tag('option')
+            except TimeoutException:
+                weeks_to_select = [None]            
 
-            for week in weeks.find_by_tag('option'):
-                week_num = int(week.text.lower().split('week ')[-1])
-                weeks.select(week.value)
-                time.sleep(1)
+            for week in weeks_to_select:
+                if week is not None:
+                    # It is week 2 or later
+                    week_num = int(week.text.lower().split('week ')[-1])
+                    weeks.select(week.value)
+                    time.sleep(1) # Fix this next
+                else:
+                    # It is week 1
+                    week_num = 1
 
                 page_buttons = browser.find_by_xpath("//*[contains(@class, 'Pagination__list__item pointer inline-flex justify-center items-center')]")
 
