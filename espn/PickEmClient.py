@@ -1,3 +1,4 @@
+import random
 from bs4 import BeautifulSoup
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
@@ -23,13 +24,13 @@ class PickEmClient:
             buttons.first.click()
 
             # Wait for the dropdown to appear on the page
-            wait = WebDriverWait(browser.driver, 2)  # wait up to 10 seconds
+            wait = WebDriverWait(browser.driver, 3)  # wait up to 3 seconds
             try:
                 weeks = wait.until(
                     EC.presence_of_all_elements_located(
                         (By.XPATH, "//*[contains(@class, 'dropdown__select')]")
                     ),
-                    "The Group Picks' 'weeks' dropdown did not appear within 10 seconds",
+                    "The Group Picks' 'weeks' dropdown did not appear within 3 seconds",
                 )
                 weeks_to_select = weeks.find_by_tag("option")
             except TimeoutException:
@@ -40,11 +41,13 @@ class PickEmClient:
                     # It is week 2 or later
                     week_num = int(week.text.lower().split("week ")[-1])
                     weeks.select(week.value)
-                    time.sleep(1)  # Fix this next
                 else:
                     # It is week 1
                     week_num = 1
 
+                # Sleep for a random duration between 0.5 and 2 seconds
+                # When I try to use an explicit wait ESPN gives me a captcha
+                time.sleep(random.uniform(0.5, 2))
                 page_buttons = browser.find_by_xpath(
                     "//*[contains(@class, 'Pagination__list__item pointer inline-flex justify-center items-center')]"
                 )
