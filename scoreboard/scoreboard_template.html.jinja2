@@ -6,6 +6,37 @@
     <title>Winners and Losers 2023</title>
     <link rel="icon" href="images/favicon.ico">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <style>
+    .hover-highlight {
+      background-color: #f5f5f5; /* or any other light color you'd like */
+    }
+    .table-wrapper {
+      position: relative;
+      overflow: hidden;
+    }
+    .table-fixed {
+        position: absolute;
+        top: 0;
+        left: 0;
+        overflow: hidden;
+        width: 450px; /* Adjust as necessary for the first three columns */
+        z-index: 1; /* Ensure the fixed columns appear on top */
+    }
+    .table-scroll {
+        margin-left: 450px; /* Should match the width of .table-fixed */
+        overflow-x: auto;
+        width: calc(100% - 450px);
+    }
+    .table tbody tr {
+        height: 50px;
+    }
+    .table td, .table th {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    </style>    
   </head>
 
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -43,95 +74,108 @@
       <form class="form-inline">
         <input type="text" id="query" onkeyup="search_table()" placeholder="Search for Users..">
       </form>
-      <div class="table-responsive">
-        <table id="points_table" class="table table-hover table-bordered">
-          <thead class="thead-light">
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">User</th>
-              <th scope="col">Overall Score</th>
-              <th scope="col">W1 Score</th>
-              <th scope="col">W2 Score</th>
-              <th scope="col">W3 Score</th>
-              <th scope="col">W4 Score</th>
-              <th scope="col">W5 Score</th>
-              <th scope="col">W6 Score</th>
-              <th scope="col">W7 Score</th>
-              <th scope="col">W8 Score</th>
-              <th scope="col">W9 Score</th>
-              <th scope="col">W10 Score</th>
-              <th scope="col">W11 Score</th>
-              <th scope="col">W12 Score</th>
-              <th scope="col">W13 Score</th>
-              <th scope="col">W14 Score</th>
-              <th scope="col">W15 Score</th>
-              <th scope="col">W16 Score</th>
-              <th scope="col">W17 Score</th>
-              <th scope="col">W18 Score</th>
-            </tr>
-          </thead>
-          <tbody>
-	    {% for rank,team,score in ranked_team_totals %}
-            <tr>
-              <th scope="row">{{rank}}</th> {# Rank #}
-              <td>{{team}}</td> {# Username #}
-              <td>{{score}}</td> {# Total score #}
-              {% set rowloop = loop %}
-	      {% for week in teams_to_weekly_scores[team] %}
-              {% if week > 0 %}
-              <td class="table-success">{{week}}</td>
-              {% elif week < 0 %}
-              <td class="table-danger">{{week}}</td>
-              {% else %}
-              <td>{{week}}</td>
-              {% endif %}
-              {% endfor %}
-            </tr>
+      <div class="table-wrapper">
+        <div class="table-fixed">
+          <table id="points_table_summary" class="table table-hover table-bordered">
+            <thead class="thead-light">
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">User</th>
+                <th scope="col">Overall Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for rank,team,score in ranked_team_totals %}
+                <tr>
+                  <th scope="row">{{rank}}</th> {# Rank #}
+                  <td class="team_name" >{{team}}</td> {# Username #}
+                  <td class="overall_score" >{{score}}</td> {# Total score #}
+                </tr>
+              {% endfor %}            
+            </table>
+        </div>
+        <div class="table-scroll">
+          <table id="points_table" class="table table-hover table-bordered">
+            <thead class="thead-light">
+              <tr>
+                <th scope="col">W1 Score</th>
+                <th scope="col">W2 Score</th>
+                <th scope="col">W3 Score</th>
+                <th scope="col">W4 Score</th>
+                <th scope="col">W5 Score</th>
+                <th scope="col">W6 Score</th>
+                <th scope="col">W7 Score</th>
+                <th scope="col">W8 Score</th>
+                <th scope="col">W9 Score</th>
+                <th scope="col">W10 Score</th>
+                <th scope="col">W11 Score</th>
+                <th scope="col">W12 Score</th>
+                <th scope="col">W13 Score</th>
+                <th scope="col">W14 Score</th>
+                <th scope="col">W15 Score</th>
+                <th scope="col">W16 Score</th>
+                <th scope="col">W17 Score</th>
+                <th scope="col">W18 Score</th>
+              </tr>
+            </thead>
+            <tbody>
+            {% for rank,team,score in ranked_team_totals %}
+              <tr>
+                {% set rowloop = loop %}
+                {% for week in teams_to_weekly_scores[team] %}
+                  {% if week > 0 %}
+                <td class="table-success">{{week}}</td>
+                  {% elif week < 0 %}
+                <td class="table-danger">{{week}}</td>
+                  {% else %}
+                <td>{{week}}</td>
+                  {% endif %}
+                {% endfor %}
+              </tr>
             {% endfor %}
-          </tbody>
-        </table>
+            </tbody>
+          </table>        
+        </div>
 
-        <table id="records_table" style="display: none;" class="table table-hover table-bordered">
-          <thead class="thead-light">
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">User</th>
-              <th scope="col">Overall Score</th>
-              <th scope="col">W1 Record</th>
-              <th scope="col">W2 Record</th>
-              <th scope="col">W3 Record</th>
-              <th scope="col">W4 Record</th>
-              <th scope="col">W5 Record</th>
-              <th scope="col">W6 Record</th>
-              <th scope="col">W7 Record</th>
-              <th scope="col">W8 Record</th>
-              <th scope="col">W9 Record</th>
-              <th scope="col">W10 Record</th>
-              <th scope="col">W11 Record</th>
-              <th scope="col">W12 Record</th>
-              <th scope="col">W13 Record</th>
-              <th scope="col">W14 Record</th>
-              <th scope="col">W15 Record</th>
-              <th scope="col">W16 Record</th>
-              <th scope="col">W17 Record</th>
-              <th scope="col">W18 Record</th>
+        <div class="table-scroll">
+          <table id="records_table" style="display: none;" class="table table-hover table-bordered records_table">
+            <thead class="thead-light">
+              <tr>
+                <th scope="col">W1 Record</th>
+                <th scope="col">W2 Record</th>
+                <th scope="col">W3 Record</th>
+                <th scope="col">W4 Record</th>
+                <th scope="col">W5 Record</th>
+                <th scope="col">W6 Record</th>
+                <th scope="col">W7 Record</th>
+                <th scope="col">W8 Record</th>
+                <th scope="col">W9 Record</th>
+                <th scope="col">W10 Record</th>
+                <th scope="col">W11 Record</th>
+                <th scope="col">W12 Record</th>
+                <th scope="col">W13 Record</th>
+                <th scope="col">W14 Record</th>
+                <th scope="col">W15 Record</th>
+                <th scope="col">W16 Record</th>
+                <th scope="col">W17 Record</th>
+                <th scope="col">W18 Record</th>
 
-            </tr>
-          </thead>
-          <tbody>
-	    {% for rank,team,score in ranked_team_totals %}
-            <tr>
-              <th scope="row">{{rank}}</th> {# Rank #}
-              <td>{{team}}</td> {# Username #}
-              <td>{{score}}</td> {# Total score #}
-              {% set rowloop = loop %}
-	      {% for week in teams_to_weekly_records[team] %}
-              <td>{{week}}</td>
-              {% endfor %}
-            </tr>
+              </tr>
+            </thead>
+            <tbody>
+            {% for rank,team,score in ranked_team_totals %}
+              <tr>
+                {% set rowloop = loop %}
+                {% for week in teams_to_weekly_records[team] %}
+                  <td>{{week}}</td>
+                {% endfor %}
+              </tr>
             {% endfor %}
-          </tbody>
-        </table>
+            </tbody>
+          </table>        
+        </div>
+
+
       </div>
       <p style="font-size: x-small">Scoreboard generated {{now}} <a href="https://github.com/apawloski/picks2021">(Source code)</a></p>
     </div>
@@ -155,38 +199,90 @@
           records_table.style.display = "table";
         }
         function search_table() {
-          // Declare variables
-          var input, filter, table, tr, td, i;
-          input = document.getElementById("query");
-          filter = input.value.toUpperCase();
-          table = document.getElementById("points_table");
-          tr = table.getElementsByTagName("tr");
+            // Declare variables
+            var input, filter, tableSummary, pointsTable, recordsTable, trSummary, trPoints, trRecords, td, i;
 
-          for (i = 0; i < tr.length; i++) {
-            td = tr[i].getElementsByTagName("td")[0];
-            if (td) {
-              if (td.innerHTML.toUpperCase().indexOf(filter) > -1) {
-                tr[i].style.display = "";
-              } else {
-                tr[i].style.display = "none";
-              }
+            input = document.getElementById("query");
+            filter = input.value.toUpperCase();
+
+            // Get the three tables and their rows
+            tableSummary = document.getElementById("points_table_summary");
+            pointsTable = document.getElementById("points_table");
+            recordsTable = document.getElementById("records_table");
+
+            trSummary = tableSummary.getElementsByTagName("tr");
+            trPoints = pointsTable.getElementsByTagName("tr");
+            trRecords = recordsTable.getElementsByTagName("tr");
+
+            // Loop through all rows in the summary table
+            for (i = 1; i < trSummary.length; i++) {
+                td = trSummary[i].getElementsByClassName("team_name")[0];
+
+                if (td) {
+                    if (td.innerHTML.toUpperCase().indexOf(filter) > -1) {
+                        // Show rows in all three tables when a match is found
+                        trSummary[i].style.display = "";
+                        trPoints[i].style.display = "";
+                        trRecords[i].style.display = "";
+                    } else {
+                        // Hide rows in all three tables when no match
+                        trSummary[i].style.display = "none";
+                        trPoints[i].style.display = "none";
+                        trRecords[i].style.display = "none";
+                    }
+                }
             }
-          }
-
-          table = document.getElementById("records_table");
-          tr = table.getElementsByTagName("tr");
-
-          for (i = 0; i < tr.length; i++) {
-            td = tr[i].getElementsByTagName("td")[0];
-            if (td) {
-              if (td.innerHTML.toUpperCase().indexOf(filter) > -1) {
-                tr[i].style.display = "";
-              } else {
-                tr[i].style.display = "none";
-              }
-            }
-          }
         }
+
+        function setupRowHighlighting() {
+            var mainTableRows = document.getElementById("points_table_summary").getElementsByTagName("tr");
+            var pointsTableRows = document.getElementById("points_table").getElementsByTagName("tr");
+            var recordsTableRows = document.getElementById("records_table").getElementsByTagName("tr");
+
+            for (let i = 0; i < mainTableRows.length; i++) {
+                mainTableRows[i].addEventListener("mouseover", function() {
+                    highlightRow(i);
+                });
+                mainTableRows[i].addEventListener("mouseout", function() {
+                    unhighlightRow(i);
+                });
+            }
+
+            for (let i = 0; i < pointsTableRows.length; i++) {
+                pointsTableRows[i].addEventListener("mouseover", function() {
+                    highlightRow(i);
+                });
+                pointsTableRows[i].addEventListener("mouseout", function() {
+                    unhighlightRow(i);
+                });
+            }
+
+            for (let i = 0; i < recordsTableRows.length; i++) {
+                recordsTableRows[i].addEventListener("mouseover", function() {
+                    highlightRow(i);
+                });
+                recordsTableRows[i].addEventListener("mouseout", function() {
+                    unhighlightRow(i);
+                });
+            }
+        }
+
+        function highlightRow(index) {
+            document.getElementById("points_table_summary").getElementsByTagName("tr")[index].classList.add("hover-highlight");
+            document.getElementById("points_table").getElementsByTagName("tr")[index].classList.add("hover-highlight");
+            document.getElementById("records_table").getElementsByTagName("tr")[index].classList.add("hover-highlight");
+        }
+
+        function unhighlightRow(index) {
+            document.getElementById("points_table_summary").getElementsByTagName("tr")[index].classList.remove("hover-highlight");
+            document.getElementById("points_table").getElementsByTagName("tr")[index].classList.remove("hover-highlight");
+            document.getElementById("records_table").getElementsByTagName("tr")[index].classList.remove("hover-highlight");
+        }
+
+        // Call the setup function after the DOM has loaded
+        document.addEventListener("DOMContentLoaded", setupRowHighlighting);
+
+
     </script>
   </body>
 </html>
