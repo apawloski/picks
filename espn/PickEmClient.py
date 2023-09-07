@@ -181,7 +181,7 @@ class Helpers:
     @staticmethod
     def weeks_to_ties(week):
         week_tie_map = {
-            1: ["IND", "HOU"],  # e.g. ["PHI", "ATL"]
+            1: [],  # e.g. ["PHI", "ATL"]
             2: [],
             3: [],
             4: [],
