@@ -26,11 +26,14 @@ class PickEmClient:
             # Wait for the dropdown to appear on the page
             wait = WebDriverWait(browser.driver, 3)  # wait up to 3 seconds
             try:
-                weeks = wait.until(
+                wait.until(
                     EC.presence_of_all_elements_located(
                         (By.XPATH, "//*[contains(@class, 'dropdown__select')]")
                     ),
                     "The Group Picks' 'weeks' dropdown did not appear within 3 seconds",
+                )
+                weeks = browser.find_by_xpath(
+                    "//*[contains(@class, 'dropdown__select')]"
                 )
                 weeks_to_select = weeks.find_by_tag("option")
             except TimeoutException:
