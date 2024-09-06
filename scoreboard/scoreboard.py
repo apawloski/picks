@@ -49,7 +49,7 @@ class Scoreboard:
             ranked_team_totals=ranked_team_totals,
             teams_to_weekly_scores=self.teams_to_weekly_scores,
             teams_to_weekly_records=self.teams_to_weekly_records,
-            now=datetime.datetime.now(),
+            now = datetime.datetime.now().strftime("%Y-%m-%d %I:%M:%S %p")
         )
 
         with open(out_file, "w") as f:

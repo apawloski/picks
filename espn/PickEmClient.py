@@ -18,13 +18,14 @@ class PickEmClient:
 
         with Browser("chrome", headless=True) as browser:
             browser.visit(
-                f"https://fantasy.espn.com/games/nfl-pigskin-pickem-2023/group?id={group_id}"
+                f"https://fantasy.espn.com/games/nfl-pigskin-pickem-2024/group?id={group_id}"
             )
+
             buttons = browser.find_by_text("Group Picks")
             buttons.first.click()
 
             # Wait for the dropdown to appear on the page
-            wait = WebDriverWait(browser.driver, 3)  # wait up to 3 seconds
+            wait = WebDriverWait(browser.driver, 3)
             try:
                 wait.until(
                     EC.presence_of_all_elements_located(
@@ -50,15 +51,20 @@ class PickEmClient:
 
                 # Sleep for a random duration between 0.5 and 2 seconds
                 # When I try to use an explicit wait ESPN gives me a captcha
-                time.sleep(random.uniform(0.5, 2))
+                time.sleep(random.uniform(1, 3))
+                # 2023 CSS
+                # page_buttons = browser.find_by_xpath(
+                #     "//*[contains(@class, 'Pagination__list__item pointer inline-flex justify-center items-center')]"
+                # )
+                # 2024 CSS
                 page_buttons = browser.find_by_xpath(
-                    "//*[contains(@class, 'Pagination__list__item pointer inline-flex justify-center items-center')]"
+                    "//*[contains(@class, 'Pagination inline-flex justify-center items-center')]//button"
                 )
 
                 pick_grids = []
                 for page_button in page_buttons:
                     page_button.click()
-                    time.sleep(1)
+                    time.sleep(3)
                     pick_grids.append(
                         browser.find_by_xpath(
                             "//*[contains(@class, 'GroupPickGrid-table')]"
@@ -124,10 +130,9 @@ class Pick:
         self.pick = pick_td
         team_icon = self.pick.find("img")
         self.team_picked = team_icon["alt"]
-        self.icon = pick_td.find("circle")
 
     def is_incorrect(self):
-        return any("PickIncorrect-circle" in x for x in self.icon["class"])
+        return self.pick.find(class_="PickIncorrect-crossMark") is not None
 
     def is_tie(self, week):
         tie_list = Helpers.weeks_to_ties(week)
@@ -139,7 +144,7 @@ class Pick:
         return any("noPick" in x for x in self.pick["class"])
 
     def is_correct(self):
-        return any("PickCorrect-circle" in x for x in self.icon["class"])
+        return self.pick.find(class_="PickCorrect-checkMark") is not None
 
 
 class Team:
