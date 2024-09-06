@@ -3,7 +3,7 @@ from scoreboard.scoreboard import Scoreboard
 
 
 def main():
-    espn = PickEmClient("fb23255b-65c1-41a0-a55b-b14cfa617a7b")
+    espn = PickEmClient("c4857724-1309-444b-a767-7ffbf1bff57b")
     teams = espn.get_teams()
     scoreboard = Scoreboard(teams)
 
