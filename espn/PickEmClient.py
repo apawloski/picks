@@ -59,12 +59,12 @@ class PickEmClient:
                 # 2024 CSS
                 page_buttons = browser.find_by_xpath(
                     "//*[contains(@class, 'Pagination__list white-space-no-wrap')]//a"
-                )    
+                )
 
                 pick_grids = [browser.find_by_xpath("//*[contains(@class, 'GroupPickGrid-table')]").first.html]
-                for index, page_button in enumerate(page_buttons):       
+                for index, page_button in enumerate(page_buttons):
                     browser.execute_script(f"document.querySelectorAll('.Pagination__list.white-space-no-wrap a')[{index}].click();")
-                    time.sleep(1)         
+                    time.sleep(1)
                     pick_grids.append(
                         browser.find_by_xpath(
                             "//*[contains(@class, 'GroupPickGrid-table')]"
