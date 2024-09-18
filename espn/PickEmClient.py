@@ -1,12 +1,20 @@
 import random
 from bs4 import BeautifulSoup
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import ElementClickInterceptedException, TimeoutException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from splinter import Browser
+from splinter.exceptions import ElementDoesNotExist
 import time
+import os
+import logging
 
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S')
+
+logger = logging.getLogger(__name__)
 
 class PickEmClient:
     def __init__(self, group_id):
@@ -25,7 +33,7 @@ class PickEmClient:
             buttons.first.click()
 
             # Wait for the dropdown to appear on the page
-            wait = WebDriverWait(browser.driver, 3)
+            wait = WebDriverWait(browser.driver, 5)
             try:
                 wait.until(
                     EC.presence_of_all_elements_located(
@@ -40,41 +48,81 @@ class PickEmClient:
             except TimeoutException:
                 weeks_to_select = [None]
 
+            weeks = browser.find_by_xpath("//*[contains(@class, 'dropdown__select')]")
+            weeks_to_select = weeks.find_by_tag("option")
+
             for week in weeks_to_select:
-                if week is not None:
-                    # It is week 2 or later
-                    week_num = int(week.text.lower().split("week ")[-1])
-                    weeks.select(week.value)
-                else:
-                    # It is week 1
-                    week_num = 1
+                week_num = int(week.text.lower().split("week ")[-1])
+                weeks.select(week.value)
+                time.sleep(2)  # Wait for the page to load
 
-                # Sleep for a random duration between 0.5 and 2 seconds
-                # When I try to use an explicit wait ESPN gives me a captcha
-                time.sleep(random.uniform(1, 3))
-                # 2023 CSS
-                # page_buttons = browser.find_by_xpath(
-                #     "//*[contains(@class, 'Pagination__list__item pointer inline-flex justify-center items-center')]"
-                # )
-                # 2024 CSS
-                page_buttons = browser.find_by_xpath(
-                    "//*[contains(@class, 'Pagination__list white-space-no-wrap')]//a"
-                )
+                pick_grids = []
+                self.go_to_first_page(browser)
 
-                pick_grids = [browser.find_by_xpath("//*[contains(@class, 'GroupPickGrid-table')]").first.html]
-                for index, page_button in enumerate(page_buttons):
-                    browser.execute_script(f"document.querySelectorAll('.Pagination__list.white-space-no-wrap a')[{index}].click();")
-                    time.sleep(1)
-                    pick_grids.append(
-                        browser.find_by_xpath(
-                            "//*[contains(@class, 'GroupPickGrid-table')]"
-                        ).first.html
-                    )
+                page_num = 1
+                while True:
+                    logger.info(f"Processing Week {week_num}, Page {page_num}")
+                    
+                    # Handle the current page
+                    try:
+                        pick_grid = browser.find_by_xpath("//*[contains(@class, 'GroupPickGrid-table')]").first
+                        # Scroll the pick_grid into view
+                        browser.execute_script("arguments[0].scrollIntoView(true);", pick_grid._element)
+                        time.sleep(1)  # Wait for the scroll to complete
+                        
+                        pick_grid_html = pick_grid['outerHTML']
 
+                        # Debug: Save the grids/screenshots
+                        # Create output directory
+                        output_dir = "pick_grid_output"
+                        os.makedirs(output_dir, exist_ok=True)
+                        
+                        # Save the pick_grid to an HTML file
+                        html_filename = f"week_{week_num}_page_{page_num}.html"
+                        html_filepath = os.path.join(output_dir, html_filename)
+                        with open(html_filepath, 'w', encoding='utf-8') as f:
+                            f.write("<html><body>")
+                            f.write(pick_grid_html)
+                            f.write("</body></html>")
+                        logger.info(f"Saved pick grid HTML to {html_filepath}")
+                        
+                        # Save a screenshot of the pick_grid
+                        png_filename = f"week_{week_num}_page_{page_num}.png"
+                        png_filepath = os.path.join(output_dir, png_filename)
+
+                        # Wait for the element to be visible
+                        browser.is_element_visible_by_xpath("//*[contains(@class, 'GroupPickGrid-table')]", wait_time=10)
+
+                        # Take screenshot of the entire page
+                        browser.driver.save_screenshot(png_filepath)
+                        logger.info(f"Saved pick grid screenshot to {png_filepath}")
+
+                        # Actually queue it for processing
+                        pick_grids.append(pick_grid_html)
+                        logger.info(f"Appended pick grid for Week {week_num}, Page {page_num}")                        
+                    except ElementDoesNotExist:
+                        logger.error(f"Warning: No pick grid found for Week {week_num}, Page {page_num}")
+
+                    # Try to find the next page button
+                    try:
+                        next_button = browser.find_by_xpath("//button[contains(@class, 'Pagination__Button--next') and not(@disabled)]").first
+                        if next_button:
+                            browser.execute_script("arguments[0].scrollIntoView(true);", next_button._element)
+                            time.sleep(2)
+                            browser.execute_script("arguments[0].click();", next_button._element)
+                            time.sleep(2)
+                            page_num += 1
+                        else:
+                            logger.info(f"No more pages for Week {week_num}")
+                            break
+                    except ElementDoesNotExist:
+                        logger.info(f"No more pages for Week {week_num}")
+                        break
+
+                # Process pick_grids for this week
                 for pick_grid in pick_grids:
-                    weeks_to_soups[week_num].append(
-                        BeautifulSoup(pick_grid, "html.parser")
-                    )
+                    weeks_to_soups[week_num].append(BeautifulSoup(pick_grid, "html.parser"))
+
 
         for week in weeks_to_soups:
             soups = weeks_to_soups[week]
@@ -124,6 +172,26 @@ class PickEmClient:
     def get_teams(self):
         return self.teams.values()
 
+    def go_to_first_page(self, browser):
+        while True:
+            try:
+                prev_button = browser.find_by_xpath("//button[contains(@class, 'Pagination__Button--prev') and not(@disabled)]").first
+                if prev_button:
+                    browser.execute_script("arguments[0].scrollIntoView(true);", prev_button._element)
+                    time.sleep(2)
+                    try:
+                        prev_button.click()
+                    except ElementClickInterceptedException:
+                        logger.error("ElementClickInterceptedException occurred. Taking screenshot.")
+                        browser.driver.save_screenshot("error_screenshot.png")
+                        logger.error("Screenshot saved as 'error_screenshot.png'")
+                        raise  # Re-raise the exception to exit the function
+                    time.sleep(2)
+                else:
+                    break
+            except ElementDoesNotExist:
+                break
+
 
 class Pick:
     def __init__(self, pick_td):
@@ -132,7 +200,8 @@ class Pick:
         self.team_picked = team_icon["alt"]
 
     def is_incorrect(self):
-        return self.pick.find(class_="PickIncorrect-crossMark") is not None
+        legacy_crossmark = self.pick.find(class_="ct-crossMark") is not None
+        return legacy_crossmark or self.pick.find(class_="PickIncorrect-crossMark") is not None
 
     def is_tie(self, week):
         tie_list = Helpers.weeks_to_ties(week)
@@ -142,10 +211,11 @@ class Pick:
 
     def is_push(self):
         return any("noPick" in x for x in self.pick["class"])
-
+    
     def is_correct(self):
-        return self.pick.find(class_="PickCorrect-checkMark") is not None
-
+        # It looks like ESPN will use either of these..
+        correct_check_mark = self.pick.find(class_="ct-checkMark") is not None
+        return correct_check_mark or self.pick.find(class_="PickCorrect-checkMark") is not None
 
 class Team:
     def __init__(self, name, owner):
